@@ -6,6 +6,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Scanner;
+import java.util.regex.Pattern;
 /*
 Команды
 
@@ -18,13 +19,21 @@ import java.util.Scanner;
 -hex сохранение/отображение в шестнадцатиричном формате
  */
 
-public class CommandLogic {
+public class  CommandLogic {
 
     private Dispatcher dispatcher;
     private String[] data;
     private Scanner scanner;
 
     private String interfaceNum;
+
+    private static final String IP_PATTERN =
+    "((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)";
+    private final Pattern pattern = Pattern.compile(IP_PATTERN);
+
+    private boolean IPValidate (String ip) {
+        return pattern.matcher(ip).matches();
+    }
 
     public CommandLogic(Dispatcher dispatcher) {
         this.dispatcher = dispatcher;
@@ -63,9 +72,19 @@ public class CommandLogic {
                     ex.printStackTrace();
                 }
                 break;
-            } else if (dispatcher.getInData().getData().containsKey(inData[i])) {
-                dispatcher.getInData().getData().put(inData[i],
-                        i == inData.length - 1 || inData[i + 1].contains("-") ? "true" : inData[i + 1]);
+            } else if (dispatcher.getInData().getFilterMap().containsKey(inData[i])) {
+
+                if (dispatcher.getInData().getFilterMap().get(inData[i]).equals("ip") && !IPValidate(inData[i+1])) {
+                    System.out.println("Некорректный ip");
+                    break;
+                }
+
+                if (i == inData.length - 1 || inData[i + 1].contains("-")) {
+                    dispatcher.getInData().getFilterMap().put(inData[i],"true");
+                } else {
+                    dispatcher.getInData().getFilterMap().put(inData[i], inData[i + 1]);
+                    i++;
+                }
                 continue;
             } else {
                 //подсветить красным строку фильтрации, если через GUI
@@ -82,8 +101,7 @@ public class CommandLogic {
 
         scanner = new Scanner(System.in);
         String inData = scanner.nextLine().toLowerCase();
-        String[] splitData = inData.split(" ");
-        parser(splitData);
+        parser(inData.split(" "));
     }
 
     public void GUICommand(String inData) {

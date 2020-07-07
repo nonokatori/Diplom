@@ -1,8 +1,8 @@
 package datawork;
 
+import org.pcap4j.core.PcapHandle;
 import org.pcap4j.core.PcapNetworkInterface;
 
-import java.lang.reflect.MalformedParameterizedTypeException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -47,31 +47,50 @@ public class Dispatcher implements ISniffer {
 
     public class InData {
 
-        private Map<String, String> filter;
-        private Map<String, String> direction;
-        private String data;
+        private Map<String, String> filterMap;
+        private String filter;
 
         public InData() {
-            filter = new HashMap<>();
-            filter.put("ip", "");
-            filter.put("ip.src", "");
-            filter.put("ip.dst", "");
-            filter.put("port", "");
-            filter.put("udp", "");
-            filter.put("tcp", "");
-            filter.put("icmp", "");
-            filter.put("arp", "");
-
+            filterMap = new HashMap<>();
+            filterMap.put("ip", "");
+            filterMap.put("port", "");
+            filterMap.put("udp", "");
+            filterMap.put("tcp", "");
+            filterMap.put("icmp", "");
+            filterMap.put("arp", "");
+            filterMap.put("src", "");
+            filterMap.put("dst", "");
         }
 
-        public Map<String, String> getFilter() {
+        public Map<String, String> getFilterMap() {
+            return filterMap;
+        }
+
+        public PcapHandle.PcapDirection getDirection() {
+ return filterMap.get("src") == "true" ? PcapHandle.PcapDirection.OUT :
+                    filterMap.get("dst") == "true" ? PcapHandle.PcapDirection.IN : PcapHandle.PcapDirection.INOUT;
+        }
+
+        public void setFilterMap(Map<String, String> filterMap) {
+            this.filterMap = filterMap;
+        }
+
+        public String getFilter() {
+            StringBuilder buildFilter = new StringBuilder("");
+            for (Map.Entry<String, String> entry: filterMap.entrySet()) {
+                if (!"".equals(entry.getValue())) {
+                    if (!("true".equals(entry.getValue())))
+                        buildFilter.append(entry.getKey()).append(" ");
+                    else
+                        buildFilter.append(entry.getKey()).append(" ").append(entry.getValue()).append(" ");
+                }
+            }
+
+
+            filter = filterMap.toString().replaceAll("[{},]", "").
+                    replaceAll("="," ");
             return filter;
         }
-
-        public getDirection() {
-            return direction;
-        }
-
 
     }
 

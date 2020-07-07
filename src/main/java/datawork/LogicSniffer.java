@@ -28,6 +28,7 @@ public class LogicSniffer implements ISniffer {
                 .openLive(snapshotLength, PcapNetworkInterface.PromiscuousMode.PROMISCUOUS, readTimeout);
 
         setFilter(inData.getData());
+        if(inData.)
     }
 
     @Override
@@ -73,12 +74,12 @@ public class LogicSniffer implements ISniffer {
         // и данные, которые кушают кнопки
     }
 
-    protected void setDirection(PcapHandle.PcapDirection) {
-
+    protected void setDirection(PcapHandle.PcapDirection dir) throws PcapNativeException, NotOpenException {
+        handle.setDirection(dir);
     }
 
     protected void setFilter(String filter) throws UnknownHostException, PcapNativeException, NotOpenException {
-        handle.setFilter(filter, BpfProgram.BpfCompileMode.OPTIMIZE, "".equals(inData.getFilter().get("ip"))
-                ? PcapHandle.PCAP_NETMASK_UNKNOWN : (Inet4Address) InetAddress.getByName(inData.getFilter().get("ip")));
+        handle.setFilter(filter, BpfProgram.BpfCompileMode.OPTIMIZE, "".equals(inData.getFilterMap().get("ip"))
+                ? PcapHandle.PCAP_NETMASK_UNKNOWN : (Inet4Address) InetAddress.getByName(inData.getFilterMap().get("ip")));
     }
 }
