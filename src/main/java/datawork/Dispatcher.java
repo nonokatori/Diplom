@@ -1,8 +1,11 @@
 package datawork;
 
+import mainclass.Packet;
+import org.pcap4j.core.NotOpenException;
 import org.pcap4j.core.PcapHandle;
-import org.pcap4j.core.PcapNetworkInterface;
+import org.pcap4j.core.PcapNativeException;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -16,6 +19,7 @@ public class Dispatcher implements ISniffer {
     private OutData outData = new OutData();
     private InData inData = new InData();
     private LogicSniffer logicSniffer;
+    private ArrayList<String> interfaceList;
 
     public OutData getOutData() {
         return outData;
@@ -27,39 +31,60 @@ public class Dispatcher implements ISniffer {
 
     public void save() {
 
+
+
     }
 
     @Override
-    public void start(String name) {
-        start(name);
+    public void start() {
+        try {
+            logicSniffer.start();
+        } catch (PcapNativeException e) {
+            e.printStackTrace();
+        } catch (NotOpenException e) {
+            e.printStackTrace();
+        }
     }
 
-    @Override
     public void reboot() {
-
+        stop();
+        allInterface();
+        start();
     }
 
     @Override
     public void stop() {
-
+        logicSniffer.stop();
     }
 
+    @Override
+    public void selectInterface(String inData) {
+        logicSniffer.selectInterface(inData);
+    }
+
+    @Override
+    public ArrayList<String> allInterface() {
+        interfaceList = logicSniffer.allInterface();
+        return interfaceList;
+    }
 
     public class InData {
 
         private Map<String, String> filterMap;
-        private String filter;
+        private String interfaceName;
+
 
         public InData() {
             filterMap = new HashMap<>();
-            filterMap.put("ip", "");
-            filterMap.put("port", "");
-            filterMap.put("udp", "");
-            filterMap.put("tcp", "");
-            filterMap.put("icmp", "");
-            filterMap.put("arp", "");
-            filterMap.put("src", "");
-            filterMap.put("dst", "");
+            filterMap.put("-ip", "");
+            filterMap.put("-port", "");
+            filterMap.put("-udp", "");
+            filterMap.put("-tcp", "");
+            filterMap.put("-icmp", "");
+            filterMap.put("-arp", "");
+            filterMap.put("-src", "");
+            filterMap.put("-dst", "");
+
         }
 
         public Map<String, String> getFilterMap() {
@@ -67,12 +92,8 @@ public class Dispatcher implements ISniffer {
         }
 
         public PcapHandle.PcapDirection getDirection() {
- return filterMap.get("src") == "true" ? PcapHandle.PcapDirection.OUT :
+        return filterMap.get("src") == "true" ? PcapHandle.PcapDirection.OUT :
                     filterMap.get("dst") == "true" ? PcapHandle.PcapDirection.IN : PcapHandle.PcapDirection.INOUT;
-        }
-
-        public void setFilterMap(Map<String, String> filterMap) {
-            this.filterMap = filterMap;
         }
 
         public String getFilter() {
@@ -85,38 +106,32 @@ public class Dispatcher implements ISniffer {
                         buildFilter.append(entry.getKey()).append(" ").append(entry.getValue()).append(" ");
                 }
             }
-
-
-            filter = filterMap.toString().replaceAll("[{},]", "").
-                    replaceAll("="," ");
-            return filter;
+            return buildFilter.toString().replaceAll("-", "").
+                    replace("src", "").replace("dst", "");
         }
 
+        public String getInterfaceName() {
+            return interfaceName;
+        }
+
+        public void setInterfaceName(String interfaceName) {
+            this.interfaceName = interfaceName;
+        }
     }
 
     public class OutData {
 
-        ConcurrentLinkedQueue<String> packetQueue;
+        ConcurrentLinkedQueue<Packet> packetQueue;
 
-        public ConcurrentLinkedQueue<String> getPacketQueue() {
+        public ConcurrentLinkedQueue<Packet> getPacketQueue() {
             return packetQueue;
         }
 
-        public void setPacketQueue(ConcurrentLinkedQueue<String> packetQueue) {
+        public void setPacketQueue(ConcurrentLinkedQueue<Packet> packetQueue) {
             this.packetQueue = packetQueue;
         }
 
     }
 
-    @Override
-    public PcapNetworkInterface selectInterface(String inData) {
 
-    }
-
-    @Override
-    public String[] allInterface() {
-
-
-        return new String[0];
-    }
 }

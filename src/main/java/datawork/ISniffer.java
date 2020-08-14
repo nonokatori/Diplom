@@ -1,16 +1,17 @@
 package datawork;
 
+import org.pcap4j.core.NotOpenException;
 import org.pcap4j.core.PcapNativeException;
 import org.pcap4j.core.PcapNetworkInterface;
 
-public interface ISniffer {
-    void start(String name) throws PcapNativeException;
+import java.util.ArrayList;
 
-    void reboot();
+public interface ISniffer {
+    void start() throws PcapNativeException, NotOpenException;
 
     void stop();
 
-    PcapNetworkInterface selectInterface(String inData);
+    void selectInterface(String inData);
 
-    String[] allInterface();
+    ArrayList<String> allInterface();
 }

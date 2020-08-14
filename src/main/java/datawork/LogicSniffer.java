@@ -1,18 +1,24 @@
 package datawork;
 
 import org.pcap4j.core.*;
+import org.pcap4j.packet.Packet;
 
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class LogicSniffer implements ISniffer {
 
     private Dispatcher.InData inData;
     private Dispatcher.OutData outData;
     private PcapHandle handle;
+    private PcapDumper dumper;
+    private PcapNetworkInterface networkInterface;
+//    private int max_packet;
+
 
     public void setData(Dispatcher.InData inData, Dispatcher.OutData outData) {
         this.inData = inData;
@@ -20,47 +26,75 @@ public class LogicSniffer implements ISniffer {
     }
 
     @Override
-    public void start(String nameInterface) throws PcapNativeException {
+    public void start() throws PcapNativeException, NotOpenException {
         int snapshotLength = 65536;
         int readTimeout = 50;
 
-        this.handle = selectInterface(nameInterface)
+        selectInterface(inData.getInterfaceName());
+        this.handle = networkInterface
                 .openLive(snapshotLength, PcapNetworkInterface.PromiscuousMode.PROMISCUOUS, readTimeout);
+        dumper = handle.dumpOpen("out.pcap");
+        try {
+            changeFilter();
+        } catch (NotOpenException | UnknownHostException e) {
+            e.printStackTrace();
+        }
 
-        setFilter(inData.getData());
-        if(inData.)
+        PacketListener listener = new PacketListener() {
+            @Override
+            public void gotPacket(Packet packet) {
+                // передача пакетов вперед
+
+                try {
+                    dumper.dump(packet, handle.getTimestamp());
+                } catch (NotOpenException e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+
+        try {
+            int maxPackets = (int) Double.POSITIVE_INFINITY; //бесконечное число пакетов
+            handle.loop(maxPackets, listener);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
-    @Override
-    public void reboot() {
+    public void changeFilter () throws PcapNativeException, NotOpenException, UnknownHostException {
+        setFilter(inData.getFilter());
+        setDirection(inData.getDirection());
 
+        for (Map.Entry<String, String> entry : inData.getFilterMap().entrySet() ){
+            entry.setValue("");
+        }
     }
+
 
     @Override
     public void stop() {
-
-
+        dumper.close();
+        handle.close();
     }
 
     @Override
-    public PcapNetworkInterface selectInterface(String interfaceName) {
+    public void selectInterface(String interfaceName) {
         List<PcapNetworkInterface> allDevs = null;
         PcapNetworkInterface[] selectInt = {null};
         try {
             Pcaps.findAllDevs().stream()
                     .filter(packet -> {
                         packet.getName().equals(interfaceName);
-                        selectInt[0] = packet;
+                        networkInterface = packet;
                         return false;
                     }).findFirst();
         } catch (PcapNativeException e) {
             e.printStackTrace();
         }
-        return selectInt[0];
     }
 
     @Override
-    public String[] allInterface() {
+    public ArrayList<String> allInterface() {
         ArrayList<String> list = new ArrayList<>();
         try {
             Pcaps.findAllDevs()
@@ -69,7 +103,7 @@ public class LogicSniffer implements ISniffer {
         } catch (PcapNativeException e) {
             e.printStackTrace();
         }
-        return (String[]) list.toArray();
+        return list;
         // добавить в диспатчер обработку полученного массива для вывода в консоль
         // и данные, которые кушают кнопки
     }

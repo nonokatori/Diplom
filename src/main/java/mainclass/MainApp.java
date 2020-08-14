@@ -1,3 +1,5 @@
+package mainclass;
+
 import datawork.Dispatcher;
 
 import datawork.LogicSniffer;
@@ -10,10 +12,15 @@ import javafx.stage.Stage;
 import varwork.CommandLogic;
 import varwork.GUI;
 
-public class Main extends Application {
+
+public class MainApp extends Application {
+    public static CommandLogic getCommandLogic() {
+        return commandLogic;
+    }
+
+    static private CommandLogic commandLogic;
 
     public static void main(String[] args) {
-        launch(args);
 
         LogicSniffer logicSniffer = new LogicSniffer();
         Dispatcher dispatcher = new Dispatcher(logicSniffer);
@@ -21,38 +28,38 @@ public class Main extends Application {
         Dispatcher.OutData outData = dispatcher.getOutData();
         logicSniffer.setData(inData, outData);
         CommandLogic commandLogic = new CommandLogic(dispatcher);
-        GUI gui = new GUI(commandLogic);
-//
-//        String os = System.getProperty("os.name").toLowerCase();
-//
-//        if ("win".equals(os)) {
-//            launch(args);
-//            while (true) {
-//                Platform.runLater(() -> {
-//                    gui.update();
-//                });
-//            }
-//        }
-//        else {
-//            commandLogic.startParser();
-//        }
+        MainApp.commandLogic = commandLogic;
+
+        String os = System.getProperty("os.name").toLowerCase();
+
+        if (!os.contains("win")) {
+            commandLogic.startParser();
+        }
+        else {
+            launch(args);
+        }
     }
 
 
+//    @Override
+//    public void init() throws Exception {
+//        System.out.println("Application inits");
+//        super.init();
+//    }
+
     @Override
-
-    public void init() throws Exception {
-        System.out.println("Application inits");
-        super.init();
-    }
-
-    @Override
-
     public void start(Stage primaryStage) throws Exception {
-        Parent root = FXMLLoader.load(getClass().getResource("/resources/in.fxml"));
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/in.fxml"));
+        Parent root = loader.load();
+
         primaryStage.setTitle("Программный модуль анализа сетевого трафика");
         primaryStage.setScene(new Scene(root));
         primaryStage.show();
+
+        GUI controller = loader.getController();
+        Platform.runLater( () -> controller.updateTable());
     }
+
+
 }
 

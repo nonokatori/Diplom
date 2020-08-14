@@ -1,44 +1,80 @@
 package varwork;
 
-import datawork.Dispatcher;
+
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.TableColumn;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.GridPane;
 
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import javafx.stage.StageStyle;
+import mainclass.MainApp;
+import mainclass.Packet;
+
+
+import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
 public class GUI implements Initializable {
 
     @FXML
-    public MenuItem open, close, start, stop, reboot, help;
+    public MenuItem open, close, start, stop, reboot, save, help;
     @FXML
-    public Button int0, int1, int2, int3, int4,
-            int5, int6, int7, int8, int9;
+    public Menu captureMenu;
     @FXML
     public Label label;
     @FXML
     public TableColumn number, time, source, destination, protocol, length;
+    @FXML
+    public TableView <Packet> packetView;
+    @FXML
+    public AnchorPane interfaceView;
+    @FXML
+    public GridPane btnGrid;
+    @FXML
+    public Button int00,int01,int02,int03,int04,int05,int06,int07,int08,int09;
 
     private CommandLogic parser;
-    public Button[] buttons;
+    private Button [] arrBut = {int00,int01,int02,int03,int04,int05,int06,int07,int08,int09};
 
-    public GUI(CommandLogic parser) {
-        this.parser = parser;
-    }
+
+    CommandLogic commandLogic;
 
     public void initialize(URL url, ResourceBundle resourceBundle) {
-//        buttons = new Button[]{int0, int1, int2, int3, int4, int5, int6, int7, int8, int9};
+        commandLogic = MainApp.getCommandLogic();
+
+        packetView.setVisible(false);
+        interfaceView.setVisible(true);
+        captureMenu.setVisible(false);
+        close.setDisable(true);
+        save.setDisable(true);
+
+//        setValueButton();
     }
 
     public void clkInt(ActionEvent actionEvent) {
         Button btn = (Button) actionEvent.getSource();
-        parser.GUICommand(btn.getId().substring(3, 4));
+        parser.GUICommand(btn.getId());
 
+    }
+
+    public void setValueButton () {
+        commandLogic.parser(new String[]{"-l"});
+        for (int i = 0; i < arrBut.length; i++) {
+            if(i < commandLogic.getAllInterface().size()) {
+                arrBut[i].setText(commandLogic.getAllInterface().get(i));
+            } else {
+                arrBut[i].setVisible(false);
+            }
+        }
     }
 
     public void clkStart(ActionEvent actionEvent) {
@@ -55,43 +91,41 @@ public class GUI implements Initializable {
 
     }
 
-    public void clkHelp(ActionEvent actionEvent) {
-        parser.GUICommand("help");
+    public void clkHelp(ActionEvent actionEvent) throws IOException {
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/help.fxml"));
+        Parent root = loader.load();
+        Stage stage = new Stage();
 
+        stage.setTitle("Помощь");
+        stage.setScene(new Scene(root));
+        stage.show();
     }
 
     public void clkOpen(ActionEvent actionEvent) {
-        parser.GUICommand("open");
+//        parser.GUICommand("open");
 
     }
 
     public void clkClose(ActionEvent actionEvent) {
-        parser.GUICommand("close");
-
+//        parser.GUICommand("close");
     }
 
     public void clkExit(ActionEvent actionEvent) {
         System.exit(0);
     }
 
-//    public void update() {
-//
-//        int coun = 0;
-//
-//        for (int i = 0; i < 3; i++)
-//
-//            for (int j = 0; j < 3; j++){
-//
-//                if(!buttons[coun].getText().equals(ticToe.getArrField()[i][j])) {
-//
-//                    buttons[coun].setText(Character.toString(ticToe.getArrField()[i][j]));
-//
-//                }
-//
-//                coun++;
-//
-//            }
-//
-//    }
+    public void setParser(CommandLogic parser) {
+        this.parser = parser;
+    }
+
+    public void clkSave(ActionEvent actionEvent) {
+    }
+
+    public void updateTable() {
+
+        ObservableList<Packet> newRow = packetView.getItems();
+        if (commandLogic.getDispatcher().getOutData().getPacketQueue().size() != 0)
+                newRow.add(commandLogic.getDispatcher().getOutData().getPacketQueue().poll());
+    }
 }
 

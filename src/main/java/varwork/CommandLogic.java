@@ -4,6 +4,7 @@ import datawork.Dispatcher;
 
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Scanner;
 import java.util.regex.Pattern;
@@ -24,6 +25,12 @@ public class  CommandLogic {
     private Dispatcher dispatcher;
     private String[] data;
     private Scanner scanner;
+    private ArrayList<String> allInterface;
+
+
+    public ArrayList<String> getAllInterface() {
+        return allInterface;
+    }
 
     private String interfaceNum;
 
@@ -51,7 +58,7 @@ public class  CommandLogic {
 
         for (int i = 0; i < inData.length; i++) {
             if (Arrays.asList(inData).contains("-l")) {
-                dispatcher.allInterface();
+                this.allInterface = dispatcher.allInterface();
                 break;
             } else if ("-help".equals(inData[i])) {
                 try (FileReader reader = new FileReader("src/main/resources/help.txt")) {
@@ -63,15 +70,12 @@ public class  CommandLogic {
                     System.out.println(ex.getMessage());
                 }
                 break;
-            } else if ("help".equals(inData)) {
-                String testFilePath = "src/main/resources/test.txt";
-                try {
-                    Process process = Runtime.getRuntime().exec("cmd /c notepad.exe " + testFilePath);
-                    process.waitFor();
-                } catch (Exception ex) {
-                    ex.printStackTrace();
+            } else if  (allInterface.contains(inData[i])) {
+                if (!allInterface.contains(dispatcher.getInData())) {
+                    dispatcher.getInData().setInterfaceName(inData[i]);
+                } else {
+
                 }
-                break;
             } else if (dispatcher.getInData().getFilterMap().containsKey(inData[i])) {
 
                 if (dispatcher.getInData().getFilterMap().get(inData[i]).equals("ip") && !IPValidate(inData[i+1])) {
@@ -92,16 +96,17 @@ public class  CommandLogic {
                 break;
             }
         }
-
         //-i eth0 -src -port 8080 -udp
     }
 
     public void startParser() {
         System.out.println("Sniffer starting...");
 
+        // запуск сниффера...
         scanner = new Scanner(System.in);
         String inData = scanner.nextLine().toLowerCase();
         parser(inData.split(" "));
+        printData();
     }
 
     public void GUICommand(String inData) {
@@ -109,6 +114,13 @@ public class  CommandLogic {
         else if (inData.equals("stop")) dispatcher.stop();
         else if (inData.equals("reboot")) dispatcher.reboot();
         else if (inData.equals("save")) dispatcher.save();
+        else if (inData.contains("int0")) {
+
+        }
+    }
+
+    public Dispatcher getDispatcher() {
+        return dispatcher;
     }
 
 }
