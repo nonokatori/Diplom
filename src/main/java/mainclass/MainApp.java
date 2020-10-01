@@ -4,13 +4,12 @@ import datawork.Dispatcher;
 
 import datawork.LogicSniffer;
 import javafx.application.Application;
-import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 import varwork.CommandLogic;
-import varwork.GUI;
+import varwork.ControllerInterface;
 
 
 public class MainApp extends Application {
@@ -32,8 +31,8 @@ public class MainApp extends Application {
 
         String os = System.getProperty("os.name").toLowerCase();
 
-        if (!os.contains("win")) {
-            commandLogic.startParser();
+        if (os.contains("win")) {
+            commandLogic.startParser(); //сюда кинуть аргс, тогда при запуске будут задаваться параметры работы программы
         }
         else {
             launch(args);
@@ -56,8 +55,9 @@ public class MainApp extends Application {
         primaryStage.setScene(new Scene(root));
         primaryStage.show();
 
-        GUI controller = loader.getController();
-        Platform.runLater( () -> controller.updateTable());
+        ControllerInterface controller = loader.getController();
+
+
     }
 
 
