@@ -1,6 +1,7 @@
 package varwork;
 
 import datawork.Dispatcher;
+import org.pcap4j.core.PcapNetworkInterface;
 
 import java.io.FileReader;
 import java.io.IOException;
@@ -25,7 +26,7 @@ public class  CommandLogic {
     private Dispatcher dispatcher;
     private String[] data;
     private Scanner scanner;
-    private ArrayList<String> allInterface;
+    private ArrayList<String> allInterface = new ArrayList<>();
 
 
     public ArrayList<String> getAllInterface() {
@@ -56,11 +57,13 @@ public class  CommandLogic {
             //нулевые фильтры или пустой запрос
         }
 
+
         for (int i = 0; i < inData.length; i++) {
-            if (Arrays.asList(inData).contains("-l")) {
-                this.allInterface = dispatcher.allInterface();
+            if (Arrays.asList(inData).contains("-l")) { // вывод всех интерфейсов
+                for (String s: allInterface)
+                    System.out.println( "["+ allInterface.indexOf(s) + "]: "+ s);
                 break;
-            } else if ("-help".equals(inData[i])) {
+            } else if ("-help".equals(inData[i])) { // вывод справки
                 try (FileReader reader = new FileReader("src/main/resources/help.txt")) {
                     int c;
                     while ((c = reader.read()) != -1) {
@@ -70,16 +73,17 @@ public class  CommandLogic {
                     System.out.println(ex.getMessage());
                 }
                 break;
-            } else if  (allInterface.contains(inData[i])) {
+            } else if (allInterface.contains(inData[i])) {
                 if (!allInterface.contains(dispatcher.getInData())) {
                     dispatcher.getInData().setInterfaceName(inData[i]);
-                } else {
-
+                    break;
+//                } else {
+//                    System.out.println("Invalid request. Enter -l to list the interface.");
                 }
             } else if (dispatcher.getInData().getFilterMap().containsKey(inData[i])) {
 
                 if (dispatcher.getInData().getFilterMap().get(inData[i]).equals("ip") && !IPValidate(inData[i+1])) {
-                    System.out.println("Некорректный ip");
+                    System.out.println("Invalid ip-address");
                     break;
                 }
 
@@ -97,16 +101,19 @@ public class  CommandLogic {
             }
         }
         //-i eth0 -src -port 8080 -udp
+        //-i \Device\NPF_{96B414DE-F38C-4CA7-95CB-14A0A4054463} -src -port 8080 -udp
     }
 
     public void startParser() {
         System.out.println("Sniffer starting...");
-
         // запуск сниффера...
         scanner = new Scanner(System.in);
-        String inData = scanner.nextLine().toLowerCase();
+        dispatcher.allInterface().stream().forEach(s-> allInterface.add(s.getName()));
+        System.out.println(allInterface);
+        String inData = scanner.nextLine();
         parser(inData.split(" "));
-        printData();
+
+        dispatcher.start();
     }
 
     public void GUICommand(String inData) {

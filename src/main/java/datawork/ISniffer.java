@@ -13,5 +13,5 @@ public interface ISniffer {
 
     void selectInterface(String inData);
 
-    ArrayList<String> allInterface();
+    ArrayList<PcapNetworkInterface> allInterface();
 }

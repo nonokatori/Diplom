@@ -4,6 +4,7 @@ import mainclass.Packet;
 import org.pcap4j.core.NotOpenException;
 import org.pcap4j.core.PcapHandle;
 import org.pcap4j.core.PcapNativeException;
+import org.pcap4j.core.PcapNetworkInterface;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -19,7 +20,7 @@ public class Dispatcher implements ISniffer {
     private OutData outData = new OutData();
     private InData inData = new InData();
     private LogicSniffer logicSniffer;
-    private ArrayList<String> interfaceList;
+    private ArrayList<PcapNetworkInterface> interfaceList;
 
     public OutData getOutData() {
         return outData;
@@ -63,7 +64,7 @@ public class Dispatcher implements ISniffer {
     }
 
     @Override
-    public ArrayList<String> allInterface() {
+    public ArrayList<PcapNetworkInterface> allInterface() {
         interfaceList = logicSniffer.allInterface();
         return interfaceList;
     }
